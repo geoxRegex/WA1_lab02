@@ -69,8 +69,9 @@ function FilmLibrary(){
     this.sortByDate = function(){
 
         library.sort(function(a,b){
-            if(dayjs(a.date).isSameOrBefore(b.date))
+            if(dayjs(a.date).isSameOrBefore(b.date) || dayjs(b.date).isValid() == false)
                 return -1;
+            
             else 
                 return 1;   
         });
@@ -117,7 +118,7 @@ function createFilm(stringa){
 }
 
 
-const temp_str = "Id: 1, Title: Pulp Fiction, Favorite: true, Watch date: March 10, 2022, Score: 5\nId: 2, Title: 21 Grams, Favorite: true, Watch date: March 17, 2022, Score: 4\nId: 3, Title: Star Wars, Favorite: false, Watch date: <not defined>, Score: <not assigned>\nId: 4, Title: Matrix, Favorite: false, Watch date: <not defined>, Score: <not assigned>\nId: 5, Title: Shrek, Favorite: false, Watch date: March 21, 2022, Score: 3";
+const temp_str = "Id: 1, Title: Pulp Fiction, Favorite: true, Watch date: March 30, 2022, Score: 5\nId: 2, Title: 21 Grams, Favorite: true, Watch date: March 17, 2022, Score: 4\nId: 3, Title: Star Wars, Favorite: false, Watch date: <not defined>, Score: <not assigned>\nId: 4, Title: Matrix, Favorite: false, Watch date: <not defined>, Score: <not assigned>\nId: 5, Title: Shrek, Favorite: false, Watch date: March 21, 2022, Score: 3";
 
 const list = temp_str.split("\n");
 
@@ -135,13 +136,13 @@ let film = new Film();
 
 films.sortByDate();
 
-films.getRated();
+//films.getRated();
 
-films.resetWatchedFilms();
+//films.resetWatchedFilms();
 
+// films.printAll();
 
 films.getRated();
 
 // deletes the film with the id assigned as argument from the list of films
-//films.deleteFilm(3);
-
+//films.deleteFilm(3);<
