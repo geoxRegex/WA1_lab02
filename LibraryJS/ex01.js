@@ -7,36 +7,45 @@ var localizedFormat = require('dayjs/plugin/localizedFormat');
 
 dayjs.extend(localizedFormat);
 dayjs.extend(isSameOrBefore);
-function Film(id,title, favorite, date, score){    
+
+
+
+const sqlite = require('sqlite3');
+const db = new sqlite.Database('./films.db', (err) => { 
+    if (err){
+        throw err; 
+    }
+});
+
+
+function Film(id,title, favorite, watchDate, score){    
     this.id = id;
     this.title = title;
     this.favorite = favorite;
-    
+    this.date = "<not defined>";
 // allowed to use an empty string "" for the date and the 
 
-    if (date === "<not defined>")
+    if ( dayjs(watchDate).isValid())
+        this.date = dayjs(watchDate).format('YYYY-MM-DD');
+    else{
         this.date = "<not defined>";
-    else
-        this.date = date;
+    }
     
     this.score = score;
 
     this.printFilm= function(){
 //        Id: 1, Title: Pulp Fiction, Favorite: true, Watch date: March 10, 2022, Score: 5
-        console.log("Id: %d, Title: %s, Favorite: %s, Watch date: %s, Score: %s", id, title, favorite, date, score );
-    }
-    this.resetDate = function(){
-        this.date = "<not defined>";
+        console.log("Id: %d, Title: %s, Favorite: %s, Watch date: %s, Score: %s", id, title, favorite, watchDate, score );
     }
 
 }
 
 
 function FilmLibrary(){
-    let library = [];
+    this.library = [];
 
     this.addFilm = function(film){
-        return library.push(film);
+        this.library.push(film);
     }
 
 
@@ -62,27 +71,73 @@ function FilmLibrary(){
     }
 
     this.printAll = function(){
-        library.forEach(element => element.printFilm());
+        this.library.forEach(element => element.printFilm());
 
     }
 
-    this.sortByDate = function(){
+    this.sortByDate = () =>{
 
-        library.sort(function(a,b){
-            if(dayjs(a.date).isSameOrBefore(b.date))
+        this.library.sort(function(a,b){
+            if(dayjs(a.date).isSameOrBefore(b.date) || dayjs(b.date).isValid() == false)
                 return -1;
+            
             else 
                 return 1;   
         });
     }
 
-    this.resetWatchedFilms = function(){
-        library.forEach(x => x.resetDate());
-    }
+    this.resetWatchedFilms = () => {
+        this.library.forEach((film) => film.date = ''); 
+        
+    } 
 
+
+this.all = () => {
+        return new Promise((resolve, reject) =>{
+            const sql_all = "SELECT * FROM films";  
+
+            db.all(sql_all, (err, rows) => {
+                if(err){
+                    reject(err);
+                }else{
+                     resolve(rows.map((f) => 
+                        new Film(f.id, f.title, f.favorite, f.watchdate, f.rating)
+                    ));
+                }
+            });
+        });
+    };
+this.favorite= () => {
+        return new Promise((resolve, reject) => {
+            const sql_fav = "SELECT * FROM films WHERE favorite = 1";
+            db.all(sql_fav, (err, rows) => {
+                if(err)
+                    reject(err);
+                else {
+                    resolve(rows.map((f) =>
+                        new Film(f.id, f.title, f.favorite, f.watchdate, f.rating)
+                    ));
+                }
+            }
+        )
+    });
+};
+
+this.watchedToday = () => {
+    return new Promise((resolve, reject) =>{
+        const sql_today = "SELECT * FROM films WHERE watchdate = ?";
+        const day = dayjs('2022-03-21').format('YYYY-MM-DD');
+        db.all(sql_today, [day], (err, rows) => {
+            if(err)
+                reject(err);
+            else 
+                resolve(rows.map((f) => 
+                new Film(f.id, f.title, f.favorite, f.watchdate, f.rating)));
+        })
+    });
 
 }
-
+}
 
 
 function createFilm(stringa){
@@ -117,31 +172,62 @@ function createFilm(stringa){
 }
 
 
-const temp_str = "Id: 1, Title: Pulp Fiction, Favorite: true, Watch date: March 10, 2022, Score: 5\nId: 2, Title: 21 Grams, Favorite: true, Watch date: March 17, 2022, Score: 4\nId: 3, Title: Star Wars, Favorite: false, Watch date: <not defined>, Score: <not assigned>\nId: 4, Title: Matrix, Favorite: false, Watch date: <not defined>, Score: <not assigned>\nId: 5, Title: Shrek, Favorite: false, Watch date: March 21, 2022, Score: 3";
-
-const list = temp_str.split("\n");
 
 
- let films = new FilmLibrary();
+// dichiarazione main
+async function main(){
 
-let film = new Film();
- for (let x of list){
-    films.addFilm(createFilm(x));
- }
+const ff = new FilmLibrary();
 
-// deleteFilm perfettamente funzionante
-//films.deleteFilm(3);
+const all_ff = await ff.all();
+//console.log(all_ff);
 
+const favorite_ff = await ff.favorite();
+console.log(favorite_ff);
 
-films.sortByDate();
-
-films.getRated();
-
-films.resetWatchedFilms();
+const today_ff = await ff.watchedToday();
+console.log('Found ', today_ff.length,' films watched today: \n',  today_ff);
 
 
-films.getRated();
+console.log('\n');
 
-// deletes the film with the id assigned as argument from the list of films
-//films.deleteFilm(3);
+for (let x of favorite_ff){
+   x.printFilm();
+}
+
+// var all_films = new FilmLibrary();
+
+}
+
+
+main();
+/*
+const all = async function get_all(){
+    var lista = new FilmLibrary();
+    return new Promise((resolve, reject) => {
+    db.all(sql_all,  (err,rows) => 
+    {
+        if(err) {
+            console.log("error");
+            throw err;
+        }
+
+        else {
+            for(let row of rows){
+            //console.log(row);
+             lista.addFilm(row.id, row.title, row.favorite, row.watchDate, row.rating);
+            }
+            return lista;
+        }
+    }); 
+});
+}
+*/
+
+
+// db.close();
+
+    
+
+
 
