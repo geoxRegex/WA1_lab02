@@ -201,33 +201,3 @@ for (let x of favorite_ff){
 
 
 main();
-/*
-const all = async function get_all(){
-    var lista = new FilmLibrary();
-    return new Promise((resolve, reject) => {
-    db.all(sql_all,  (err,rows) => 
-    {
-        if(err) {
-            console.log("error");
-            throw err;
-        }
-
-        else {
-            for(let row of rows){
-            //console.log(row);
-             lista.addFilm(row.id, row.title, row.favorite, row.watchDate, row.rating);
-            }
-            return lista;
-        }
-    }); 
-});
-}
-*/
-
-
-// db.close();
-
-    
-
-
-
